@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F.M.G - Gestion Centrale Béton</title>
+    
+    <!-- Inclure Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #0f1a2f;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            background: #1e2b4d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2d4cc8;
+        }
+
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #0f1a2f;
+            border: 1px solid #2d4cc8;
+            border-radius: 5px;
+            color: white;
+        }
+
+        button {
+            background: #2d4cc8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #1e3a8a;
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            width: auto;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+
+        .document-item {
+            background: #0f1a2f;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 3px solid #2d4cc8;
+            transition: all 0.3s ease;
+        }
+
+        .document-item:hover {
+            transform: translateX(5px);
+            border-left-color: #10b981;
+        }
+
+        .message {
+            background: #0f1a2f;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #10b981;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .header-fmg {
+            background: #1e2b4d;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #2d4cc8;
+            text-align: center;
+        }
+
+        .logo-fmg {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2d4cc8;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .company-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .company-subtitle {
+            color: #a0aec0;
+            margin-bottom: 10px;
+        }
+
+        .contact-info {
+            color: #cbd5e0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .service-header {
+            background: #1e2b4d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #2d4cc8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info {
+            background: #1e2b4d;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-size: 0.8rem;
+        }
+
+        .search-box {
+            background: #0f1a2f;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #1e2b4d;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #2d4cc8;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d4cc8;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #0f1a2f;
+            border: 1px solid #2d4cc8;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: #2d4cc8;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- PAGE CONNEXION -->
+    <div id="loginPage" class="container">
+        <div class="header-fmg">
+            <div class="logo-fmg">F.M.G</div>
+            <div class="company-name">SARL Al Fath Al Moubin Groupe</div>
+            <div class="company-subtitle">Centrale à Béton</div>
+            <div class="contact-info">
+                ‪+213 560 67 78 77‬<br>
+                Alfathalmoubinebeton@gmail.com<br>
+                Rue messkin fellouh N°23 ilot 53, tijdit, Mostaganem
+            </div>
+        </div>
+        
+        <h2>🔐 Connexion au Système</h2>
+        <select id="serviceSelect">
+            <option value="">-- Choisir service --</option>
+            <option value="chef">👨‍💼 Direction Générale</option>
+            <option value="rh">📊 RH/Finance/Comptabilité</option>
+            <option value="commercial">💰 Commercial/Production</option>
+            <option value="approvisionnement">📦 Approvisionnement/Stock</option>
+            <option value="technique">🔧 Technique/Maintenance</option>
+        </select>
+        <input type="password" id="passwordInput" placeholder="Mot de passe">
+        <button onclick="login()">Se connecter</button>
+    </div>
+
+    <!-- INTERFACE CHEF -->
+    <div id="chefInterface" class="hidden">
+        <div class="service-header">
+            <div>
+                <div style="font-size: 1.2rem; font-weight: bold;">👨‍💼 Direction Générale - Accès total</div>
+                <div style="color: #a0aec0;">F.M.G - SARL Al Fath Al Moubin Groupe</div>
+            </div>
+            <button onclick="logout()" style="width: auto;">Déconnexion</button>
+        </div>
+
+        <!-- STATISTIQUES -->
+        <div class="container">
+            <h3>📊 Tableau de Bord</h3>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDocs">0</div>
+                    <div>Documents totaux</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="rhDocs">0</div>
+                    <div>Documents RH</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="commercialDocs">0</div>
+                    <div>Documents Commercial</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stockDocs">0</div>
+                    <div>Documents Stock</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECHERCHE -->
+        <div class="container">
+            <h3>🔍 Recherche avancée</h3>
+            <div class="search-box">
+                <input type="text" id="globalSearch" placeholder="Rechercher dans tous les documents..." onkeyup="filterDocuments()">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setFilter('all')">Tous</button>
+                    <button class="filter-btn" onclick="setFilter('rh')">RH</button>
+                    <button class="filter-btn" onclick="setFilter('commercial')">Commercial</button>
+                    <button class="filter-btn" onclick="setFilter('approvisionnement')">Stock</button>
+                    <button class="filter-btn" onclick="setFilter('technique')">Technique</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENTS RH -->
+        <div class="container">
+            <h3>📊 Documents RH/Finance</h3>
+            <div id="chefRhDocuments"></div>
+        </div>
+
+        <!-- DOCUMENTS COMMERCIAL -->
+        <div class="container">
+            <h3>💰 Documents Commercial/Production</h3>
+            <div id="chefCommercialDocuments"></div>
+        </div>
+
+        <!-- DOCUMENTS APPROVISIONNEMENT -->
+        <div class="container">
+            <h3>📦 Documents Approvisionnement/Stock</h3>
+            <div id="chefApprovisionnementDocuments"></div>
+        </div>
+
+        <!-- DOCUMENTS TECHNIQUE -->
+        <div class="container">
+            <h3>🔧 Documents Technique</h3>
+            <div id="chefTechniqueDocuments"></div>
+        </div>
+
+        <!-- MESSAGERIE CHEF -->
+        <div class="container">
+            <h3>📨 Messagerie interne</h3>
+            <select id="messageTo">
+                <option value="tous">À tous les services</option>
+                <option value="rh">RH/Finance</option>
+                <option value="commercial">Commercial/Production</option>
+                <option value="approvisionnement">Approvisionnement</option>
+                <option value="technique">Technique</option>
+            </select>
+            <textarea id="messageText" placeholder="Votre message..." rows="3"></textarea>
+            <button onclick="sendMessage()">Envoyer le message</button>
+            
+            <div style="margin-top: 15px;">
+                <h4>📨 Messages envoyés</h4>
+                <div id="sentMessages"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERFACE RH -->
+    <div id="rhInterface" class="hidden">
+        <div class="service-header">
+            <div>
+                <div style="font-size: 1.2rem; font-weight: bold;">📊 RH/Finance/Comptabilité</div>
+                <div style="color: #a0aec0;">F.M.G - Gestion RH, finance et comptabilité</div>
+            </div>
+            <button onclick="logout()" style="width: auto;">Déconnexion</button>
+        </div>
+
+        <!-- STATISTIQUES RH -->
+        <div class="container">
+            <h3>📈 Mes Statistiques</h3>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="rhTotalDocs">0</div>
+                    <div>Mes documents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="rhMessagesCount">0</div>
+                    <div>Messages reçus</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AJOUT DOCUMENTS RH -->
+        <div class="container">
+            <h3>📤 Importer documents RH (PDF, Word, Excel, Images)</h3>
+            <select id="rhDocType">
+                <option value="pointage">Pointage mensuel travailleurs</option>
+                <option value="salaires">État salaires mensuels</option>
+                <option value="pv_caisse">PV de Caisse Quotidien</option>
+                <option value="depenses">État dépenses/encaissements</option>
+            </select>
+            <input type="file" id="rhFileInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png" style="margin: 10px 0;">
+            <button onclick="uploadRealDocument('rh')">📎 Importer le document</button>
+        </div>
+
+        <!-- MES DOCUMENTS RH -->
+        <div class="container">
+            <h3>📁 Mes documents RH</h3>
+            <input type="text" id="rhSearch" placeholder="Rechercher mes documents..." onkeyup="filterServiceDocuments('rh')" style="margin-bottom: 15px;">
+            <div id="rhDocuments"></div>
+        </div>
+
+        <!-- MESSAGES RECUS -->
+        <div class="container">
+            <h3>📨 Messages de la Direction</h3>
+            <div id="rhMessages"></div>
+        </div>
+    </div>
+
+    <!-- INTERFACE COMMERCIAL -->
+    <div id="commercialInterface" class="hidden">
+        <div class="service-header">
+            <div>
+                <div style="font-size: 1.2rem; font-weight: bold;">💰 Commercial/Production</div>
+                <div style="color: #a0aec0;">F.M.G - Gestion production et commercialisation</div>
+            </div>
+            <button onclick="logout()" style="width: auto;">Déconnexion</button>
+        </div>
+
+        <!-- STATISTIQUES COMMERCIAL -->
+        <div class="container">
+            <h3>📈 Mes Statistiques</h3>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="commercialTotalDocs">0</div>
+                    <div>Mes documents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="commercialMessagesCount">0</div>
+                    <div>Messages reçus</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AJOUT DOCUMENTS COMMERCIAL -->
+        <div class="container">
+            <h3>📤 Importer documents Commercial (PDF, Word, Excel, Images)</h3>
+            <select id="commercialDocType">
+                <option value="plan_production">Plan production journée</option>
+                <option value="factures">Factures clients</option>
+                <option value="bons_livraison">Bons de Livraison</option>
+                <option value="encaissements">Encaissements et liste clients</option>
+                <option value="fiche_production">Fiche production hebdomadaire</option>
+            </select>
+            <input type="file" id="commercialFileInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png" style="margin: 10px 0;">
+            <button onclick="uploadRealDocument('commercial')">📎 Importer le document</button>
+        </div>
+
+        <!-- MES DOCUMENTS COMMERCIAL -->
+        <div class="container">
+            <h3>📁 Mes documents Commercial</h3>
+            <input type="text" id="commercialSearch" placeholder="Rechercher mes documents..." onkeyup="filterServiceDocuments('commercial')" style="margin-bottom: 15px;">
+            <div id="commercialDocuments"></div>
+        </div>
+
+        <!-- MESSAGES RECUS -->
+        <div class="container">
+            <h3>📨 Messages de la Direction</h3>
+            <div id="commercialMessages"></div>
+        </div>
+    </div>
+
+    <!-- INTERFACE APPROVISIONNEMENT -->
+    <div id="approvisionnementInterface" class="hidden">
+        <div class="service-header">
+            <div>
+                <div style="font-size: 1.2rem; font-weight: bold;">📦 Approvisionnement/Stock</div>
+                <div style="color: #a0aec0;">F.M.G - Gestion des achats et du stock</div>
+            </div>
+            <button onclick="logout()" style="width: auto;">Déconnexion</button>
+        </div>
+
+        <!-- STATISTIQUES STOCK -->
+        <div class="container">
+            <h3>📈 Mes Statistiques</h3>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="approvisionnementTotalDocs">0</div>
+                    <div>Mes documents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="approvisionnementMessagesCount">0</div>
+                    <div>Messages reçus</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AJOUT DOCUMENTS APPROVISIONNEMENT -->
+        <div class="container">
+            <h3>📤 Importer documents Stock (PDF, Word, Excel, Images)</h3>
+            <select id="approvisionnementDocType">
+                <option value="inventaire">Inventaire magasin</option>
+                <option value="fiche_stock">Fiche Stock Quotidienne</option>
+                <option value="factures_fournisseurs">Factures fournisseurs</option>
+                <option value="decharges">Décharges dépenses</option>
+                <option value="etat_global">État global dépenses</option>
+            </select>
+            <input type="file" id="approvisionnementFileInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png" style="margin: 10px 0;">
+            <button onclick="uploadRealDocument('approvisionnement')">📎 Importer le document</button>
+        </div>
+
+        <!-- MES DOCUMENTS APPROVISIONNEMENT -->
+        <div class="container">
+            <h3>📁 Mes documents Stock</h3>
+            <input type="text" id="approvisionnementSearch" placeholder="Rechercher mes documents..." onkeyup="filterServiceDocuments('approvisionnement')" style="margin-bottom: 15px;">
+            <div id="approvisionnementDocuments"></div>
+        </div>
+
+        <!-- MESSAGES RECUS -->
+        <div class="container">
+            <h3>📨 Messages de la Direction</h3>
+            <div id="approvisionnementMessages"></div>
+        </div>
+    </div>
+
+    <!-- INTERFACE TECHNIQUE -->
+    <div id="techniqueInterface" class="hidden">
+        <div class="service-header">
+            <div>
+                <div style="font-size: 1.2rem; font-weight: bold;">🔧 Technique/Maintenance</div>
+                <div style="color: #a0aec0;">F.M.G - Gestion engins et maintenance</div>
+            </div>
+            <button onclick="logout()" style="width: auto;">Déconnexion</button>
+        </div>
+
+        <!-- STATISTIQUES TECHNIQUE -->
+        <div class="container">
+            <h3>📈 Mes Statistiques</h3>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="techniqueTotalDocs">0</div>
+                    <div>Mes documents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="techniqueMessagesCount">0</div>
+                    <div>Messages reçus</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AJOUT DOCUMENTS TECHNIQUE -->
+        <div class="container">
+            <h3>📤 Importer documents Technique (PDF, Word, Excel, Images)</h3>
+            <select id="techniqueDocType">
+                <option value="maintenance_hebdo">Maintenance préventive hebdomadaire</option>
+                <option value="maintenance_mensuelle">Maintenance préventive mensuelle</option>
+                <option value="consommation_centraliste">Consommation centraliste quotidienne</option>
+                <option value="consommation_carburant">Consommation carburant quotidienne</option>
+                <option value="pointage_chauffeurs">Pointage chauffeurs et heures</option>
+                <option value="consommation_magasin">Consommation magasin quotidienne</option>
+            </select>
+            <input type="file" id="techniqueFileInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png" style="margin: 10px 0;">
+            <button onclick="uploadRealDocument('technique')">📎 Importer le document</button>
+        </div>
+
+        <!-- MES DOCUMENTS TECHNIQUE -->
+        <div class="container">
+            <h3>📁 Mes documents Technique</h3>
+            <input type="text" id="techniqueSearch" placeholder="Rechercher mes documents..." onkeyup="filterServiceDocuments('technique')" style="margin-bottom: 15px;">
+            <div id="techniqueDocuments"></div>
+        </div>
+
+        <!-- MESSAGES RECUS -->
+        <div class="container">
+            <h3>📨 Messages de la Direction</h3>
+            <div id="techniqueMessages"></div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION SUPABASE
+        const SUPABASE_URL = 'https://knbcmbufzdlefaqskvpc.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuYmNtYnVmemRsZWZhcXNrdnBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODU3NTcsImV4cCI6MjA3NjU2MTc1N30.oViPLOj_6Es7vRlqiJyiaOJRZfVMPc5siqYlSc5unVE';
+        
+        // Initialiser Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // MOTS DE PASSE
+        const passwords = {
+            'chef': 'chef123',
+            'rh': 'rh123',
+            'commercial': 'com123',
+            'approvisionnement': 'appro123',
+            'technique': 'tech123'
+        };
+
+        // STOCKAGE DES DONNEES
+        let documents = {
+            'rh': [],
+            'commercial': [],
+            'approvisionnement': [],
+            'technique': []
+        };
+
+        let messages = [];
+        let currentFilter = 'all';
+
+        // FONCTIONS SUPABASE - DOCUMENTS
+        async function saveDocumentToSupabase(doc) {
+            try {
+                // Convertir le fichier en base64
+                const fileData = await fileToBase64(doc.fichier);
+                
+                const { data, error } = await supabase
+                    .from('documents')
+                    .insert([
+                        {
+                            nom: doc.nom,
+                            type: doc.type,
+                            fichier_type: doc.fichierType,
+                            taille: doc.taille,
+                            date: doc.date,
+                            service: doc.service,
+                            fichier_data: fileData,
+                            fichier_nom: doc.nom
+                        }
+                    ])
+                    .select();
+                
+                if (error) throw error;
+                console.log('Document sauvegardé dans Supabase:', data);
+                return data[0];
+            } catch (error) {
+                console.error('Erreur sauvegarde Supabase:', error);
+                showNotification('Erreur sauvegarde document: ' + error.message, 'error');
+                return null;
+            }
+        }
+
+        async function loadDocumentsFromSupabase() {
+            try {
+                const { data, error } = await supabase
+                    .from('documents')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                // Réorganiser les données par service
+                documents = {
+                    'rh': [],
+                    'commercial': [],
+                    'approvisionnement': [],
+                    'technique': []
+                };
+                
+                if (data) {
+                    data.forEach(doc => {
+                        if (documents[doc.service]) {
+                            documents[doc.service].push({
+                                id: doc.id,
+                                nom: doc.nom,
+                                type: doc.type,
+                                fichierType: doc.fichier_type,
+                                taille: doc.taille,
+                                date: doc.date,
+                                service: doc.service,
+                                fichier: base64ToFile(doc.fichier_data, doc.fichier_nom, doc.fichier_type),
+                                created_at: doc.created_at
+                            });
+                        }
+                    });
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Erreur chargement Supabase:', error);
+                showNotification('Erreur chargement documents: ' + error.message, 'error');
+                return null;
+            }
+        }
+
+        async function deleteDocumentFromSupabase(docId) {
+            try {
+                const { error } = await supabase
+                    .from('documents')
+                    .delete()
+                    .eq('id', docId);
+                
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                console.error('Erreur suppression Supabase:', error);
+                showNotification('Erreur suppression document: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // FONCTIONS SUPABASE - MESSAGES
+        async function saveMessageToSupabase(message) {
+            try {
+                const { data, error } = await supabase
+                    .from('messages')
+                    .insert([
+                        {
+                            destinataire: message.destinataire,
+                            message: message.message,
+                            date: message.date,
+                            expediteur: message.expediteur
+                        }
+                    ])
+                    .select();
+                
+                if (error) throw error;
+                return data[0];
+            } catch (error) {
+                console.error('Erreur sauvegarde message:', error);
+                showNotification('Erreur envoi message: ' + error.message, 'error');
+                return null;
+            }
+        }
+
+        async function loadMessagesFromSupabase() {
+            try {
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                return data || [];
+            } catch (error) {
+                console.error('Erreur chargement messages:', error);
+                showNotification('Erreur chargement messages: ' + error.message, 'error');
+                return [];
+            }
+        }
+
+        // FONCTIONS UTILITAIRES FICHIERS
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function base64ToFile(base64, filename, mimeType) {
+            try {
+                const byteString = atob(base64.split(',')[1]);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                
+                const blob = new Blob([ab], { type: mimeType });
+                return new File([blob], filename, { type: mimeType });
+            } catch (error) {
+                console.error('Erreur conversion base64 vers fichier:', error);
+                return null;
+            }
+        }
+
+        // CONNEXION
+        async function login() {
+            const service = document.getElementById('serviceSelect').value;
+            const password = document.getElementById('passwordInput').value;
+
+            if (!service || !password) {
+                showNotification('Veuillez sélectionner un service et entrer un mot de passe', 'error');
+                return;
+            }
+
+            if (passwords[service] === password) {
+                showNotification('Connexion en cours...', 'info');
+                
+                // Charger les données depuis Supabase
+                await loadAllData();
+                
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById(service + 'Interface').classList.remove('hidden');
+                
+                if (service === 'chef') {
+                    loadAllDocumentsForChef();
+                    updateStats();
+                    loadSentMessages();
+                } else {
+                    loadServiceDocuments(service);
+                    loadServiceMessages(service);
+                    updateServiceStats(service);
+                }
+                
+                showNotification('Connexion réussie ! Bienvenue ' + getServiceName(service), 'success');
+            } else {
+                showNotification('Mot de passe incorrect', 'error');
+            }
+        }
+
+        // CHARGER TOUTES LES DONNEES
+        async function loadAllData() {
+            try {
+                showNotification('Chargement des données...', 'info');
+                
+                // Charger les documents
+                await loadDocumentsFromSupabase();
+                
+                // Charger les messages
+                const messagesData = await loadMessagesFromSupabase();
+                messages = messagesData || [];
+                
+                showNotification('Données chargées avec succès', 'success');
+            } catch (error) {
+                console.error('Erreur chargement données:', error);
+                showNotification('Erreur chargement données', 'error');
+            }
+        }
+
+        // DECONNEXION
+        function logout() {
+            document.querySelectorAll('[id$="Interface"]').forEach(interface => {
+                interface.classList.add('hidden');
+            });
+            document.getElementById('loginPage').classList.remove('hidden');
+            
+            document.getElementById('serviceSelect').value = '';
+            document.getElementById('passwordInput').value = '';
+            
+            showNotification('Déconnexion réussie', 'info');
+        }
+
+        // UPLOAD RÉEL DE FICHIERS
+        async function uploadRealDocument(service) {
+            const fileInput = document.getElementById(service + 'FileInput');
+            const docTypeSelect = document.getElementById(service + 'DocType');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showNotification('Veuillez sélectionner un fichier', 'error');
+                return;
+            }
+            
+            // Vérifier le type de fichier
+            const allowedTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'image/jpeg',
+                'image/png'
+            ];
+            
+            if (!allowedTypes.includes(file.type)) {
+                showNotification('Type de fichier non autorisé. Formats acceptés: PDF, Word, Excel, JPEG, PNG', 'error');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification('Fichier trop volumineux. Taille maximum: 10MB', 'error');
+                return;
+            }
+            
+            const docType = docTypeSelect.options[docTypeSelect.selectedIndex].text;
+            
+            const newDoc = {
+                id: Date.now(), // ID temporaire
+                nom: file.name,
+                type: docType,
+                fichierType: file.type,
+                taille: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                date: new Date().toLocaleString('fr-FR'),
+                service: service,
+                fichier: file
+            };
+            
+            // Sauvegarder dans Supabase
+            const savedDoc = await saveDocumentToSupabase(newDoc);
+            
+            if (savedDoc) {
+                // Mettre à jour l'ID avec celui de Supabase
+                newDoc.id = savedDoc.id;
+                newDoc.created_at = savedDoc.created_at;
+                
+                // Ajouter au stockage local
+                documents[service].unshift(newDoc);
+                
+                if (service === 'chef') {
+                    loadAllDocumentsForChef();
+                    updateStats();
+                } else {
+                    loadServiceDocuments(service);
+                    updateServiceStats(service);
+                }
+                
+                fileInput.value = '';
+                showNotification('✅ Fichier importé: ' + file.name, 'success');
+            }
+        }
+
+        // CHARGER DOCUMENTS POUR SERVICE
+        function loadServiceDocuments(service) {
+            const container = document.getElementById(service + 'Documents');
+            const searchTerm = document.getElementById(service + 'Search').value.toLowerCase();
+            
+            container.innerHTML = '';
+
+            let filteredDocs = documents[service];
+            if (searchTerm) {
+                filteredDocs = documents[service].filter(doc => 
+                    doc.nom.toLowerCase().includes(searchTerm) || 
+                    doc.type.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filteredDocs.length === 0) {
+                container.innerHTML = '<div class="document-item">Aucun document trouvé</div>';
+                return;
+            }
+
+            filteredDocs.forEach(doc => {
+                const docElement = document.createElement('div');
+                docElement.className = 'document-item';
+                docElement.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <strong>${doc.nom}</strong>
+                            <div class="file-info">
+                                📝 Type: ${doc.type}<br>
+                                📊 Format: ${getFileType(doc.fichierType)} | Taille: ${doc.taille}<br>
+                                📅 Date: ${doc.date}
+                            </div>
+                        </div>
+                        <div style="margin-left: 10px;">
+                            <button class="btn-small" onclick="downloadFile('${service}', ${doc.id})">📥 Télécharger</button>
+                            <button class="btn-small" onclick="deleteDocument('${service}', ${doc.id})" style="background: #ef4444;">🗑 Supprimer</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(docElement);
+            });
+        }
+
+        // CHARGER TOUS LES DOCUMENTS POUR CHEF
+        function loadAllDocumentsForChef() {
+            const services = ['rh', 'commercial', 'approvisionnement', 'technique'];
+            const searchTerm = document.getElementById('globalSearch').value.toLowerCase();
+            
+            services.forEach(service => {
+                const container = document.getElementById('chef' + service.charAt(0).toUpperCase() + service.slice(1) + 'Documents');
+                container.innerHTML = '';
+
+                let filteredDocs = documents[service];
+                
+                // Appliquer le filtre de service
+                if (currentFilter !== 'all' && currentFilter !== service) {
+                    container.innerHTML = '<div class="document-item">Aucun document dans ce service</div>';
+                    return;
+                }
+                
+                // Appliquer la recherche
+                if (searchTerm) {
+                    filteredDocs = documents[service].filter(doc => 
+                        doc.nom.toLowerCase().includes(searchTerm) || 
+                        doc.type.toLowerCase().includes(searchTerm) ||
+                        service.toLowerCase().includes(searchTerm)
+                    );
+                }
+
+                if (filteredDocs.length === 0) {
+                    container.innerHTML = '<div class="document-item">Aucun document trouvé</div>';
+                    return;
+                }
+
+                filteredDocs.forEach(doc => {
+                    const docElement = document.createElement('div');
+                    docElement.className = 'document-item';
+                    docElement.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <strong>${doc.nom}</strong>
+                                <div class="file-info">
+                                    🏢 Service: ${getServiceName(service)} | 📝 Type: ${doc.type}<br>
+                                    📊 Format: ${getFileType(doc.fichierType)} | Taille: ${doc.taille}<br>
+                                    📅 Date: ${doc.date}
+                                </div>
+                            </div>
+                            <div style="margin-left: 10px;">
+                                <button class="btn-small" onclick="downloadFile('${service}', ${doc.id})">📥 Télécharger</button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(docElement);
+                });
+            });
+        }
+
+        // TÉLÉCHARGER UN FICHIER
+        function downloadFile(service, docId) {
+            const doc = documents[service].find(d => d.id === docId);
+            
+            if (doc && doc.fichier) {
+                try {
+                    const fileURL = URL.createObjectURL(doc.fichier);
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = fileURL;
+                    downloadLink.download = doc.nom;
+                    downloadLink.style.display = 'none';
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    setTimeout(() => {
+                        URL.revokeObjectURL(fileURL);
+                    }, 100);
+                    
+                    showNotification('Téléchargement démarré: ' + doc.nom, 'success');
+                } catch (error) {
+                    showNotification('Erreur lors du téléchargement: ' + error.message, 'error');
+                }
+            } else {
+                showNotification('❌ Fichier non disponible', 'error');
+            }
+        }
+
+        // SUPPRIMER UN DOCUMENT
+        async function deleteDocument(service, docId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
+                // Supprimer de Supabase
+                const success = await deleteDocumentFromSupabase(docId);
+                
+                if (success) {
+                    // Supprimer du stockage local
+                    documents[service] = documents[service].filter(d => d.id !== docId);
+                    loadServiceDocuments(service);
+                    if (service !== 'chef') {
+                        updateServiceStats(service);
+                    }
+                    showNotification('Document supprimé', 'info');
+                }
+            }
+        }
+
+        // OBTENIR LE TYPE DE FICHIER
+        function getFileType(fileType) {
+            const types = {
+                'application/pdf': 'PDF',
+                'application/msword': 'Word',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word',
+                'application/vnd.ms-excel': 'Excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel',
+                'image/jpeg': 'JPEG',
+                'image/png': 'PNG'
+            };
+            return types[fileType] || fileType;
+        }
+
+        // OBTENIR LE NOM DU SERVICE
+        function getServiceName(service) {
+            const names = {
+                'chef': 'Direction Générale',
+                'rh': 'RH/Finance',
+                'commercial': 'Commercial/Production',
+                'approvisionnement': 'Approvisionnement/Stock',
+                'technique': 'Technique/Maintenance'
+            };
+            return names[service] || service;
+        }
+
+        // ENVOYER MESSAGE
+        async function sendMessage() {
+            const destinataire = document.getElementById('messageTo').value;
+            const messageText = document.getElementById('messageText').value;
+
+            if (!messageText) {
+                showNotification('Veuillez écrire un message', 'error');
+                return;
+            }
+
+            const newMessage = {
+                id: Date.now(),
+                destinataire: destinataire,
+                message: messageText,
+                date: new Date().toLocaleString('fr-FR'),
+                expediteur: 'Direction Générale'
+            };
+
+            // Sauvegarder dans Supabase
+            const savedMessage = await saveMessageToSupabase(newMessage);
+            
+            if (savedMessage) {
+                newMessage.id = savedMessage.id;
+                newMessage.created_at = savedMessage.created_at;
+                
+                messages.push(newMessage);
+                document.getElementById('messageText').value = '';
+                
+                loadSentMessages();
+                showNotification('✅ Message envoyé à ' + (destinataire === 'tous' ? 'tous les services' : getServiceName(destinataire)), 'success');
+            }
+        }
+
+        // CHARGER MESSAGES ENVOYÉS
+        function loadSentMessages() {
+            const container = document.getElementById('sentMessages');
+            container.innerHTML = '';
+
+            const sentMessages = messages.filter(msg => msg.expediteur === 'Direction Générale');
+
+            if (sentMessages.length === 0) {
+                container.innerHTML = '<div class="message">Aucun message envoyé</div>';
+                return;
+            }
+
+            sentMessages.slice().reverse().forEach(msg => {
+                const msgElement = document.createElement('div');
+                msgElement.className = 'message';
+                msgElement.innerHTML = `
+                    <strong>📨 À: ${msg.destinataire === 'tous' ? 'Tous les services' : getServiceName(msg.destinataire)}</strong><br>
+                    <div style="margin: 10px 0; padding: 10px; background: #1e2b4d; border-radius: 5px;">
+                        ${msg.message}
+                    </div>
+                    <small>Envoyé le ${msg.date}</small>
+                `;
+                container.appendChild(msgElement);
+            });
+        }
+
+        // CHARGER MESSAGES POUR SERVICE
+        function loadServiceMessages(service) {
+            const container = document.getElementById(service + 'Messages');
+            container.innerHTML = '';
+
+            const serviceMessages = messages.filter(msg => 
+                msg.destinataire === service || msg.destinataire === 'tous'
+            );
+
+            if (serviceMessages.length === 0) {
+                container.innerHTML = '<div class="message">Aucun message pour le moment</div>';
+                return;
+            }
+
+            serviceMessages.slice().reverse().forEach(msg => {
+                const msgElement = document.createElement('div');
+                msgElement.className = 'message';
+                msgElement.innerHTML = `
+                    <strong>📨 De: ${msg.expediteur}</strong><br>
+                    <div style="margin: 10px 0; padding: 10px; background: #1e2b4d; border-radius: 5px;">
+                        ${msg.message}
+                    </div>
+                    <small>Envoyé le ${msg.date}</small>
+                `;
+                container.appendChild(msgElement);
+            });
+        }
+
+        // METTRE À JOUR LES STATISTIQUES
+        function updateStats() {
+            const totalDocs = Object.values(documents).reduce((sum, docs) => sum + docs.length, 0);
+            document.getElementById('totalDocs').textContent = totalDocs;
+            document.getElementById('rhDocs').textContent = documents.rh.length;
+            document.getElementById('commercialDocs').textContent = documents.commercial.length;
+            document.getElementById('stockDocs').textContent = documents.approvisionnement.length;
+        }
+
+        // METTRE À JOUR LES STATISTIQUES DU SERVICE
+        function updateServiceStats(service) {
+            const totalDocs = documents[service].length;
+            const messagesCount = messages.filter(msg => 
+                msg.destinataire === service || msg.destinataire === 'tous'
+            ).length;
+            
+            document.getElementById(service + 'TotalDocs').textContent = totalDocs;
+            document.getElementById(service + 'MessagesCount').textContent = messagesCount;
+        }
+
+        // FILTRER LES DOCUMENTS
+        function filterDocuments() {
+            loadAllDocumentsForChef();
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            loadAllDocumentsForChef();
+        }
+
+        function filterServiceDocuments(service) {
+            loadServiceDocuments(service);
+        }
+
+        // NOTIFICATIONS
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            
+            const colors = {
+                'success': '#10b981',
+                'error': '#ef4444',
+                'info': '#3b82f6'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // INITIALISATION
+        window.onload = async function() {
+            // Charger les données au démarrage
+            await loadAllData();
+            
+            // Message de bienvenue
+            if (messages.length === 0) {
+                messages.push({
+                    id: 1,
+                    destinataire: 'tous',
+                    message: 'Bienvenue dans le système de gestion F.M.G. Utilisez ce système pour importer et gérer vos documents.',
+                    date: new Date().toLocaleString('fr-FR'),
+                    expediteur: 'Direction Générale'
+                });
+            }
+        };
+    </script>
+</body>
+</html>
